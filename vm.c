@@ -330,7 +330,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
       cprintf("allocuvm out of memory (2)\n");
       deallocuvm(pgdir, newsz, oldsz);
-      kfree(mem);
+      krelease(mem);
       return 0;
     }
   }
@@ -356,9 +356,10 @@ deallocuvm(pde_t *pgdir, uint64 oldsz, uint64 newsz)
     if(pte && (*pte & PTE_P) != 0){
       pa = PTE_ADDR(*pte);
       if(pa == 0)
-        panic("kfree");
+        panic("krelease");
       char *v = P2V(pa);
-      kfree(v);
+      krelease(v);
+
       *pte = 0;
     }
   }
@@ -396,23 +397,23 @@ freevm(pde_t *pml4)
                 if(pt[l] & PTE_P) {
                   char * v = P2V(PTE_ADDR(pt[l]));
               
-                  kfree((char*)v);
+                  krelease((char*)v);
                 }
               }              
               //freeing every page table
-              kfree((char*)pt);
+              krelease((char*)pt);
             }
           }          
           // freeing every page directory
-          kfree((char*)pd);
+          krelease((char*)pd);
         }
       }
       // freeing every page directory pointer table
-      kfree((char*)pdp);
+      krelease((char*)pdp);
     }
   }
   // freeing the pml4
-  kfree((char*)pml4);
+  krelease((char*)pml4);
 
 }
 

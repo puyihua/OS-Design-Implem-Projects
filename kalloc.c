@@ -14,7 +14,7 @@ extern char end[]; // first address after kernel loaded from ELF file
 
 struct frameinfo {
   int refs;
-  int checksum; // this is not guaranteed to be correct, should be refreshed before use 
+  addr_t checksum; // this is not guaranteed to be correct, should be refreshed before use 
 };
 struct frameinfo frameinfo [PHYSTOP/PGSIZE];
 
@@ -38,7 +38,6 @@ kinit1(void *vstart, void *vend)
 {
   initlock(&kmem.lock, "kmem");
   memset(frameinfo,0,sizeof(frameinfo));
-  cprintf("size of %x entries is %d\n",PHYSTOP/PGSIZE,sizeof(frameinfo));
   kmem.use_lock = 0;
   kmem.freelist = 0;
   freerange(vstart, vend);
@@ -87,15 +86,16 @@ kfree(char *v)
 // release frame with kernel virtual address v
 void
 krelease(char *v) {
-  int frame = V2P(v);
+  addr_t frame = V2P(v);
   frameinfo[PGINDEX(frame)].refs--;  
-  if(frameinfo[PGINDEX(frame)].refs == 0)
+  if(frameinfo[PGINDEX(frame)].refs == 0) {
     kfree(P2V(frame));
+  }
 }
 
 void
 kretain(char *v) {
-  int frame = V2P(v);
+  addr_t frame = V2P(v);
   frameinfo[PGINDEX(frame)].refs++;  
 }
 
