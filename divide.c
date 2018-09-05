@@ -24,6 +24,10 @@ int main(int argc, char *argv[]){
 		exit();
 	}
 
+	if ((x>21474836)||(x<-21474837)||(y>21473836)||(y<-21474837)){
+		printf(1,"divide: input number is too big, the result is not accurate.\n");
+		// because when input falls into these intervals, the (100*x) will cause overflow of 16bit int type.
+	}
 	int nega;
 	nega = 0;
     int re1, re2 ,re3;  //error happended when define float variable
