@@ -37,6 +37,11 @@ _start:
 
 # little test, write something in (0xA0000)
 	movl $0x12345678,(%ebx)
+	
+	movw $0xa010, %ax
+	movw %ax, %es
+	movw $0x0,%si
+	movl $0x12345678, %es:(%si)
 
 # show picture
 	mov $packet,%si
@@ -50,9 +55,16 @@ _start:
 	int $0x16
 
 # change color
-	
+	movb $0x0,%bh
+	movw $0x1007,%ax
+	int $0x10
+
+	mov %bh,%bl
+	mov $0x0,%bh
+
+
 	movw $0x1010,%ax
-	movw $0x1,%bx
+	#movw $0x1,%bx
 	movb $60,%dh
 	movb $0x0,%ch
 	movb $30,%cl
