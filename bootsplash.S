@@ -55,16 +55,16 @@ _start:
 	int $0x16
 
 # change color
-	movb $0x0,%bh
-	movw $0x1007,%ax
-	int $0x10
+	#movb $0x0,%bh
+	#movw $0x1007,%ax
+	#int $0x10
 
-	mov %bh,%bl
-	mov $0x0,%bh
+	#mov %bh,%bl
+	#mov $0x0,%bh
 
 
 	movw $0x1010,%ax
-	#movw $0x1,%bx
+	movw $0x7,%bx
 	movb $60,%dh
 	movb $0x0,%ch
 	movb $30,%cl
