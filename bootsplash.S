@@ -50,32 +50,24 @@ _start:
 
 	int $0x13
 
+
 # wait for a key pressing
 	movb $0x0,%ah
 	int $0x16
+	movw $0x0,%bx
 
+changecolor:
 # change color
-	#movb $0x0,%bh
-	#movw $0x1007,%ax
-	#int $0x10
-
-	#mov %bh,%bl
-	#mov $0x0,%bh
-
-
 	movw $0x1010,%ax
-	movw $0x7,%bx
+	#movw $0x7,%bx
+	inc %bx
 	movb $60,%dh
 	movb $0x0,%ch
 	movb $30,%cl
 	int $0x10
 
-	movw $0x1015,%ax
-	movw $0x0,%bx
-	int $0x10
 
-stop:
-	jmp stop
+	jmp changecolor
 
 thestring:
 	.string "Welcome to xv6@UIC. Press any key to continue"
