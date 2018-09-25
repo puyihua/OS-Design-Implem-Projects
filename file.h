@@ -6,6 +6,7 @@ struct file {
   struct pipe *pipe;
   struct inode *ip;
   uint off;
+  int color;
 };
 
 
@@ -36,4 +37,3 @@ struct devsw {
 extern struct devsw devsw[];
 
 #define CONSOLE 1
-

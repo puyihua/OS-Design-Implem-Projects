@@ -17,9 +17,11 @@
 #include "proc.h"
 #include "x86.h"
 
-static void consputc(int);
+static void consputc(int,int);
 
 static int panicked = 0;
+
+int global_color = 0;
 
 static struct {
   struct spinlock lock;
@@ -32,7 +34,7 @@ static void
 printptr(addr_t x) {
   int i;
   for (i = 0; i < (sizeof(addr_t) * 2); i++, x <<= 4)
-    consputc(digits[x >> (sizeof(addr_t) * 8 - 4)]);
+    consputc(digits[x >> (sizeof(addr_t) * 8 - 4)],0x0007);
 }
 
 static void
@@ -56,7 +58,7 @@ printint(int xx, int base, int sign)
     buf[i++] = '-';
 
   while(--i >= 0)
-    consputc(buf[i]);
+    consputc(buf[i],0x0007);//nope
 }
 //PAGEBREAK: 50
 
@@ -79,7 +81,7 @@ cprintf(char *fmt, ...)
 
   for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
     if(c != '%'){
-      consputc(c);
+      consputc(c,0x0007); //nope
       continue;
     }
     c = fmt[++i] & 0xff;
@@ -99,15 +101,15 @@ cprintf(char *fmt, ...)
       if((s = va_arg(ap, char*)) == 0)
         s = "(null)";
       for(; *s; s++)
-        consputc(*s);
+        consputc(*s,0x0007); //nope
       break;
     case '%':
-      consputc('%');
+      consputc('%',0x0007);
       break;
     default:
       // Print unknown % sequence to draw attention.
-      consputc('%');
-      consputc(c);
+      consputc('%',0x0007);
+      consputc(c,0x0007);
       break;
     }
   }
@@ -121,7 +123,7 @@ panic(char *s)
 {
   int i;
   addr_t pcs[10];
-  
+
   cli();
   cons.locking = 0;
   cprintf("cpu%d: panic: ", cpu->id);
@@ -141,10 +143,10 @@ panic(char *s)
 static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
 
 static void
-cgaputc(int c)
+cgaputc(int c, int color)
 {
   int pos;
-  
+
   // Cursor position: col + 80*row.
   outb(CRTPORT, 14);
   pos = inb(CRTPORT+1) << 8;
@@ -156,14 +158,14 @@ cgaputc(int c)
   else if(c == BACKSPACE){
     if(pos > 0) --pos;
   } else
-    crt[pos++] = (c&0xff) | 0x0700;  // black on white
-  
+    crt[pos++] = (c&0xff) | (color << 8);  // black on white
+
   if((pos/80) >= 24){  // Scroll up.
     memmove(crt, crt+80, sizeof(crt[0])*23*80);
     pos -= 80;
     memset(crt+pos, 0, sizeof(crt[0])*(24*80 - pos));
   }
-  
+
   outb(CRTPORT, 14);
   outb(CRTPORT+1, pos>>8);
   outb(CRTPORT, 15);
@@ -172,7 +174,7 @@ cgaputc(int c)
 }
 
 void
-consputc(int c)
+consputc(int c, int color)
 {
   if(panicked){
     cli();
@@ -184,7 +186,7 @@ consputc(int c)
     uartputc('\b'); uartputc(' '); uartputc('\b');
   } else
     uartputc(c);
-  cgaputc(c);
+  cgaputc(c, color);
 }
 
 #define INPUT_BUF 128
@@ -216,20 +218,23 @@ consoleintr(int (*getc)(void))
       while(input.e != input.w &&
             input.buf[(input.e-1) % INPUT_BUF] != '\n'){
         input.e--;
-        consputc(BACKSPACE);
+        consputc(BACKSPACE,0x0007);
       }
       break;
     case C('H'): case '\x7f':  // Backspace
       if(input.e != input.w){
         input.e--;
-        consputc(BACKSPACE);
+        consputc(BACKSPACE,0x0007);
       }
       break;
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
         c = (c == '\r') ? '\n' : c;
         input.buf[input.e++ % INPUT_BUF] = c;
-        consputc(c);
+        if(global_color)
+          consputc(c,global_color);
+        else
+          consputc(c,0x7);
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
           input.w = input.e;
           wakeup(&input.r);
@@ -278,19 +283,31 @@ consoleread(struct file *f, char *dst, int n)
 }
 
 int
-consoleioctl(struct file *f, int param, int value) {  
-  cprintf("Got unknown console ioctl request. %d = %d\n",param,value);
-  return -1;
+consoleioctl(struct file *f, int param, int color) {
+  if(param)
+    global_color = color;  // global mode, set color
+  else  //param=0
+    global_color = 0;
+	f->color = color;
+
+  return 1;
+	//cprintf("Got unknown console ioctl request. %d = %d\n",param,value);
+  //return -1;
 }
 
 int
 consolewrite(struct file *f, char *buf, int n)
 {
   int i;
+  int color;
+  if (f->color == 0)
+	  color = 0x7;
+  else
+	  color = f->color;
 
   acquire(&cons.lock);
   for(i = 0; i < n; i++)
-    consputc(buf[i] & 0xff);
+    consputc(buf[i] & 0xff,color);
   release(&cons.lock);
 
   return n;
@@ -308,4 +325,3 @@ consoleinit(void)
 
   ioapicenable(IRQ_KBD, 0);
 }
-
