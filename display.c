@@ -30,11 +30,14 @@ displaywrite(struct file *f, char *buf, int n)
 {
   int i;
   ushort *vid = (ushort*)P2V(0xa0000);
-  for (i=0;i<n;i++)
+  for(i=0;i<n;i++)
   {
-    vid[i] = buf[i];
+    //vid[i] = (buf[i])&0xff;
+    //vid[i] = 0xCC;
+
+
   }
-  return 1;
+  return n;
 }
 
 void displayinit(void)

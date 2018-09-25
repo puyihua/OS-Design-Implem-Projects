@@ -82,11 +82,13 @@ fileclose(struct file *f)
 }
 
 int
-fileioctl(struct file *f, int param, int value) {  
+fileioctl(struct file *f, int param, int value) {
 
   switch(f->ip->major) {
-  case CONSOLE:
+  case CONSOLE:   // CONSOLE =1
     return consoleioctl(f,param,value);
+  case DISPLAY:
+      return displayioctl(f,param,value); 
   default:
     cprintf("Got unknown IOCTL for dev=%d, major=%d, minor=%d, %d=%d\n",f->ip->dev,(int)f->ip->major,(int)f->ip->minor,param,value);
     return -1;
@@ -182,4 +184,3 @@ filewrite(struct file *f, char *addr, int n)
   }
   panic("filewrite");
 }
-

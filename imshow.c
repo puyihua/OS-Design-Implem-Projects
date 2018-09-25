@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
   int img;
   if( (img = open("cover.raw",0)) == 0) {
     exit();
-  }  
+  }
 
   // switch modes to VGA 0x13
   if(ioctl(fd,1,0x13) < 0) {
@@ -27,8 +27,8 @@ int main(int argc, char** argv) {
     if(readbytes!=1000) {
       printf(1,"Huh, only read %d bytes from file\n",readbytes);
     }
-  
-    int wrotebytes = write(fd,buf,1000);   
+
+    int wrotebytes = write(fd,buf,1000);
     if(wrotebytes!=1000) {
       printf(1,"Huh, only wrote %d bytes to display\n",wrotebytes);
     }
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 
     int fade;
     for(fade=63;fade>0;fade-=3) {
-      
+
       // the value is a 32-bit struct containing (palette#, R, G, B)
       if(ioctl(fd,2,0x0f<<24 | 63 << 16 | fade << 8 | fade ) < 0) {
         printf(2,"Error setting palette color.\n");
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     if(beats%2)
       sleep(100);
     else
-      sleep(10);    
+      sleep(10);
   }
 
   // switch back to text
