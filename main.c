@@ -27,6 +27,7 @@ main(void)
   cprintf("\ncpu%d: starting xv6\n\n", cpunum());
   ioapicinit();    // another interrupt controller
   consoleinit();   // console hardware
+  displayinit();
   uartinit();      // serial port
   pinit();         // process table
   tvinit();        // trap vectors

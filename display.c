@@ -1,5 +1,4 @@
 #include <stdarg.h>
-
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -18,25 +17,27 @@ static struct {
   struct spinlock lock;
   int locking;
 } disp;
+unsigned int pixel = 0;
 
 int
 displayread(struct file *f, char *buf, int n)
 {
-  return -1;
+  return 1;
 }
 
 int
 displaywrite(struct file *f, char *buf, int n)
 {
   int i;
-  ushort *vid = (ushort*)P2V(0xa0000);
+  char *vid = (char*)P2V(0xa0000);
   for(i=0;i<n;i++)
   {
-    //vid[i] = (buf[i])&0xff;
+    vid[i+1000*pixel] = buf[i];
     //vid[i] = 0xCC;
 
 
   }
+  pixel++;
   return n;
 }
 
@@ -50,11 +51,24 @@ void displayinit(void)
 
 int displayioctl(struct file * f,int param,int value)
 {
-  if(param==1){
-    if(value==0x3)
-      vgaMode3();
-    if(value==0x13)
-      vgaMode13();
+  switch(param){
+    case 1:
+      if(value==0x3)
+        vgaMode3();
+      if(value==0x13)
+        vgaMode13();
+	  break;
+
+	case 2:
+	  ;
+	  int index = value>>24;
+	  int r = (value>>16)&0xff;
+	  int g = (value>>8)&0xff;
+	  int b = value&0xff;
+	  vgaSetPalette(index,r,g,b);
+	  break;
+
+
   }
   return 1;
 }
