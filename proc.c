@@ -75,6 +75,8 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (addr_t)forkret;
 
+  p->mmapsz=0;
+
   return p;
 }
 

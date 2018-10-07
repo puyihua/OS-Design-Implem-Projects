@@ -10,6 +10,10 @@ struct sleeplock;
 struct stat;
 struct superblock;
 
+//sys_proc.c
+void pageintr(addr_t);
+
+
 //entry.S
 void wrmsr(uint msr, uint64 val);
 void syscall_entry(void);
@@ -157,6 +161,7 @@ int             fetchaddr_t(addr_t, addr_t*);
 int             fetchstr(addr_t, char**);
 void            syscall(void);
 int		fetchint(addr_t, int*);
+
 
 // trap.c
 void            idtinit(void);

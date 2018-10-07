@@ -59,6 +59,11 @@ trap(struct trapframe *tf)
   }
 
   switch(tf->trapno){
+  case T_PGFLT:
+	  //TODO
+      pageintr(rcr2());
+	  lapiceoi();
+	break;
   case T_IRQ0 + IRQ_TIMER:
     if(cpunum() == 0){
       acquire(&tickslock);

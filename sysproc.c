@@ -6,6 +6,11 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "spinlock.h"
+#include "sleeplock.h"
+#include "fs.h"
+#include "file.h"
+#include "fcntl.h"
 
 int
 sys_fork(void)
@@ -56,14 +61,95 @@ sys_sbrk(void)
   return addr;
 }
 
+int argfd(int n, int *pfd, struct file **pf)
+{
+	int fd;
+	struct file *f;
+	if (argint(n, &fd)<0)
+		return -1;
+	if(fd<0||fd>=NOFILE||(f=proc->ofile[fd])==0)
+		return -1;
+	if(pfd)
+		*pfd=fd;
+	if(pf)
+		*pf = f;
+	return 0;
+}
+
 addr_t sys_mmap() {
   int fd;
   int flags;
-  if(argint(0,&fd) < 0 || argint(1,&flags) < 0) {
+  struct file *f;
+  pde_t* pgdir = proc->pgdir;
+  char *mem;
+  
+  addr_t oldsz, fsz, newsz, a;
+  
+  if(argfd(0,&fd,&f) < 0 || argint(1,&flags) < 0) {
     return -1;
   }
+
   cprintf("mmapping fd %d with %s\n",fd,(flags==0?"eager":"lazy"));
-  return 0;
+  switch (flags){
+	case 0:
+	  ;
+	  oldsz = proc->mmapsz + MMAPBASE;
+	  fsz = f->ip->size;
+	  newsz = PGROUNDUP(oldsz + fsz);
+	  a = PGROUNDUP(oldsz);
+	  for(;a < newsz;a+=PGSIZE){
+		  mem = kalloc();
+		  if(mem == 0) return 0;
+		  memset(mem,0,PGSIZE);
+		  mappages(pgdir, (char*)a, PGSIZE, V2P(mem),PTE_W|PTE_U);
+		  fileread(f,a,PGSIZE);
+	  }
+	  proc->mmapsz = newsz-MMAPBASE;
+	  switchuvm(proc);
+	  return oldsz;
+	  break;
+	case 1:
+	  ;
+	  oldsz = proc->mmapsz + MMAPBASE;
+	  //fsz = f->ip->size;
+	  //newsz = PGROUNDUP(oldsz+fsz);
+	  
+	  //proc->mmapsz = newsz-MMAPBASE;//the lowest addr of the next unused page
+	  //proc->lazy_mmap_loaded++;
+	  switchuvm(proc);
+	  return oldsz;
+	  break;
+	default:
+	  cprintf("ERROR: unknown kind of mmap flag.\n");
+	  return -1;
+  }
+}
+void pageintr(addr_t a){
+  int fd;
+  int flags;
+  struct file *f;
+  pde_t* pgdir = proc->pgdir;
+  char *mem;
+  
+  addr_t aa;
+  aa = PGROUNDDOWN(a);
+  addr_t oldsz,fsz,newsz;
+
+  if(argfd(0,&fd,&f) < 0 || argint(1,&flags) < 0) {
+    return -1;
+  }
+  
+  oldsz = proc->mmapsz + MMAPBASE;
+  newsz = PGROUNDUP(oldsz + PGSIZE);
+
+  mem = kalloc();
+  if(mem == 0) return -1;
+  memset(mem,0,PGSIZE);
+  
+  mappages(pgdir, (char*)aa, PGSIZE, V2P(mem),PTE_W|PTE_U);
+  readi(f->ip, (char*)aa, aa-oldsz, PGSIZE);
+  //switchuvm(proc);
+  proc->mmapsz = newsz - MMAPBASE;
 }
 
 int
