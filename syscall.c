@@ -135,6 +135,7 @@ extern addr_t sys_wait(void);
 extern addr_t sys_write(void);
 extern addr_t sys_uptime(void);
 extern addr_t sys_mmap(void);
+extern addr_t sys_ioctl(void);
 
 static addr_t (*syscalls[])(void) = {
 
@@ -160,6 +161,7 @@ static addr_t (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_mmap]    sys_mmap,
+[SYS_ioctl]   sys_ioctl,
 };
 
 void

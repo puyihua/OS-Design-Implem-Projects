@@ -2,7 +2,8 @@ DEBUG=TRUE
 OBJS = \
 	bio.o\
 	console.o\
-	exec.o\
+    display.o\
+    exec.o\
 	file.o\
 	fs.o\
 	ide.o\
@@ -27,6 +28,7 @@ OBJS = \
 	uart.o\
 	vectors.o\
 	vm.o\
+	vga.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
@@ -186,9 +188,10 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_imshow\
 
-fs.img: mkfs README LARGE $(UPROGS)
-	./mkfs fs.img LARGE README $(UPROGS)
+fs.img: mkfs README LARGE cover.raw $(UPROGS)
+	./mkfs fs.img LARGE README cover.raw $(UPROGS)
 
 -include *.d
 

@@ -31,12 +31,17 @@ void            cprintf(char*, ...);
 void            consoleintr(int(*)(void));
 void            panic(char*) __attribute__((noreturn));
 
+// display.c
+void            displayinit(void);
+int             displayioctl(struct file *,int,int);
+
 // exec.c
 int             exec(char*, char**);
 
 // file.c
 struct file*    filealloc(void);
 void            fileclose(struct file*);
+int             fileioctl(struct file*, int, int);
 struct file*    filedup(struct file*);
 void            fileinit(void);
 int             fileread(struct file*, char*, int n);

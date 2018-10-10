@@ -92,7 +92,6 @@ addr_t sys_mmap() {
   cprintf("mmapping fd %d with %s\n",fd,(flags==0?"eager":"lazy"));
   switch (flags){
 	case 0:
-	  ;
 	  oldsz = proc->mmapsz + MMAPBASE;
 	  fsz = f->ip->size;
 	  newsz = PGROUNDUP(oldsz + fsz);
@@ -108,8 +107,8 @@ addr_t sys_mmap() {
 	  switchuvm(proc);
 	  return oldsz;
 	  break;
+	
 	case 1:
-	  ;
 	  oldsz = proc->mmapsz + MMAPBASE;
 	  //fsz = f->ip->size;
 	  //newsz = PGROUNDUP(oldsz+fsz);
@@ -119,6 +118,20 @@ addr_t sys_mmap() {
 	  switchuvm(proc);
 	  return oldsz;
 	  break;
+	
+	case 2: ;
+	  fsz = f->ip->size;
+      addr_t targetPM = 0xA0000;
+	  a = MMAPBASE;
+	  for(; a - MMAPBASE < fsz; a+=PGSIZE, targetPM+=PGSIZE){
+	    mappages(pgdir, (char*)a, PGSIZE, targetPM ,PTE_W|PTE_U);
+	    fileread(f,a,PGSIZE);
+	  }
+	  proc->mmapsz = a - MMAPBASE;
+	  switchuvm(proc);
+	  return a;
+	  break;
+
 	default:
 	  cprintf("ERROR: unknown kind of mmap flag.\n");
 	  return -1;
