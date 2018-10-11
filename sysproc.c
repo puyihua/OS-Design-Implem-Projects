@@ -122,14 +122,16 @@ addr_t sys_mmap() {
 	case 2: ;
 	  fsz = f->ip->size;
       addr_t targetPM = 0xA0000;
-	  a = MMAPBASE;
-	  for(; a - MMAPBASE < fsz; a+=PGSIZE, targetPM+=PGSIZE){
+	  oldsz = proc->mmapsz + MMAPBASE;
+	  newsz = PGROUNDUP(oldsz+fsz);
+      a = PGROUNDUP(oldsz);
+	  for(; a <newsz; a+=PGSIZE, targetPM+=PGSIZE){
 	    mappages(pgdir, (char*)a, PGSIZE, targetPM ,PTE_W|PTE_U);
 	    fileread(f,a,PGSIZE);
 	  }
 	  proc->mmapsz = a - MMAPBASE;
 	  switchuvm(proc);
-	  return a;
+	  return oldsz;
 	  break;
 
 	default:
