@@ -91,8 +91,8 @@ trap(struct trapframe *tf)
     break;
   case T_PGFLT:
     // handle writes to deduped pages
-    if(copyonwrite((char*)rcr2()))
-      break;    
+    if((tf->err & 2) && copyonwrite((char*)rcr2()))
+      break;
 
   //PAGEBREAK: 13
   default:
