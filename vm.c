@@ -16,6 +16,8 @@ __thread struct proc *proc;
 static pde_t *kpml4;
 static pde_t *kpdpt;
 
+static pte_t *
+walkpgdir(pde_t *, const void *, int);
 static void 
 tss_set_rsp(uint *tss, uint n, uint64 rsp) {
   tss[n*2 + 1] = rsp;
@@ -90,7 +92,39 @@ seginit(void)
 /* deduplicate pages between process virtual address vstart and virtual address vend */
 void
 dedup(void *vstart, void *vend) {
-  cprintf("didn't dedup anything\n");
+  addr_t i,j;
+  pte_t *PTEi;
+  pte_t *PTEj;
+  addr_t vai,vaj;
+
+  uint refi, refj;
+  uint t;
+  addr_t pgend = (char*)PGROUNDUP((addr_t)vend);
+  //addr_t pgend = (char*)(100*PGSIZE);
+  i = (char*)PGROUNDDOWN((addr_t)vstart);
+  for(; i+PGSIZE <= pgend; i+=PGSIZE)
+  {
+	   PTEi = walkpgdir(proc->pgdir,i,0);
+	   vai = P2V((PTE_ADDR(*PTEi)));
+	   j = i + PGSIZE;
+	   if(krefcount(vai)==1){
+	 	 for(; j+PGSIZE <= pgend; j+=PGSIZE)
+	     {
+		   PTEj = walkpgdir(proc->pgdir,j,0);
+	       vaj = P2V((PTE_ADDR(*PTEj)));
+        
+		   refj = krefcount(vaj);
+		   if((refj==1)&&(memcmp(i,j,PGSIZE)==0)){
+		     kretain(vai);
+		     krelease(vaj);
+             *PTEj = (PTE_ADDR(*PTEi))|((*PTEj)&0xFFF);
+			 
+    	   }
+	     }
+       }
+  }
+  cprintf( "%p : ref= %d\n", vai, krefcount(vai));
+  switchuvm(proc);
   return;
 }
 

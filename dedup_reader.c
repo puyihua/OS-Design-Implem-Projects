@@ -9,8 +9,9 @@ main(int argc, char *argv[]) {
   memset(buf,0x88,10000000);
   printf(1,"Freepages after malloc: %d\n",freepages());
   dedup();
+  printf(1,"dedup finished\n");
   for(int i=0;i<10000000/4;i++) {
-    if(buf[i] != 0x88888888) {
+	if(buf[i] != 0x88888888) {
       printf(2,"Argh, found an incorrect value in memory!\n");
       exit();
     }
