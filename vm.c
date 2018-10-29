@@ -123,7 +123,6 @@ dedup(void *vstart, void *vend) {
 	     }
        }
   }
-  cprintf( "%p : ref= %d\n", vai, krefcount(vai));
   switchuvm(proc);
   return;
 }
