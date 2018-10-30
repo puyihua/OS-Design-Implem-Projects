@@ -93,7 +93,7 @@ trap(struct trapframe *tf)
     // handle writes to deduped pages
     if((tf->err & 2) && copyonwrite((char*)rcr2()))
       break;
-
+ 
   //PAGEBREAK: 13
   default:
     if(proc == 0 || (tf->cs&3) == 0){

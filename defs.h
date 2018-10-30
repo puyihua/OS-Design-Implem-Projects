@@ -77,6 +77,8 @@ int             krefcount(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
 int             kfreepagecount(void);
+void            setchecksum(char*, addr_t);
+addr_t          readchecksum(char*);
 
 // kbd.c
 void            kbdintr(void);

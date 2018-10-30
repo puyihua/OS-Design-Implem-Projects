@@ -107,22 +107,35 @@ dedup(void *vstart, void *vend) {
 	   PTEi = walkpgdir(proc->pgdir,i,0);
 	   vai = P2V((PTE_ADDR(*PTEi)));
 	   j = i + PGSIZE;
-	   if(krefcount(vai)==1){
+	   //if(krefcount(vai)==1){
 	 	 for(; j+PGSIZE <= pgend; j+=PGSIZE)
 	     {
 		   PTEj = walkpgdir(proc->pgdir,j,0);
 	       vaj = P2V((PTE_ADDR(*PTEj)));
         
 		   refj = krefcount(vaj);
-		   if((refj==1)&&(memcmp(i,j,PGSIZE)==0)){
+		   if((vai!=vaj)&&(memcmp(i,j,PGSIZE)==0)){
 		     kretain(vai);
 		     krelease(vaj);
-             *PTEj = (PTE_ADDR(*PTEi))|((*PTEj)&0xFFF);
-			 
+             *PTEj = (PTE_ADDR(*PTEi))|((*PTEj)&0xFFF)| PTE_COW; //COW flag
+             *PTEi = *PTEi | PTE_COW;
+			 *PTEj = *PTEj & ~PTE_W;  //disable write
+			 *PTEi = *PTEi & ~PTE_W;
+             setchecksum(vai,j);
     	   }
 	     }
-       }
+       //}
   }
+/*
+  i = (char*)PGROUNDDOWN((addr_t)vstart);
+  
+  for(; i+PGSIZE <= pgend; i+=PGSIZE)
+  {
+    PTEi = walkpgdir(proc->pgdir,i,0);
+    vai = P2V((PTE_ADDR(*PTEi)));	  
+	cprintf("%p 's content:  %d     ref: %d\n",i, *((char*)i), krefcount(vai));
+  }
+	*/
   switchuvm(proc);
   return;
 }
@@ -132,8 +145,27 @@ dedup(void *vstart, void *vend) {
 int
 copyonwrite(char* v)
 {
-  cprintf("didn't copyonwrite anything\n");
-  return 0;
+  pte_t *pte;
+  addr_t vv = PGROUNDDOWN((addr_t)v);
+  pte = walkpgdir(proc->pgdir,vv,0);
+  addr_t checksum;
+  char *mem;
+  if((*pte) & PTE_COW)
+  {
+	  checksum = readchecksum(P2V(PTE_ADDR(*pte)));
+	  krelease(P2V(PTE_ADDR(*pte)));
+	  mem = kalloc();
+	  memset(mem,0,PGSIZE);
+      *pte = *pte & ~PTE_COW | PTE_W;
+	  *pte = V2P(mem)|PTE_FLAGS(*pte);
+      memmove(vv,checksum,PGSIZE);
+	  return 1;
+
+  }
+  else
+  {	  // try to write into non-COW page
+	  return 0;
+  }
 }
 
 

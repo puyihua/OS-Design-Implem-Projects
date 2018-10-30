@@ -163,6 +163,7 @@ struct segdesc {
 #define PTE_A           0x020   // Accessed
 #define PTE_D           0x040   // Dirty
 #define PTE_PS          0x080   // Page Size
+#define PTE_COW         0x200
 
 // Address in page table or page directory entry
 #define PTE_ADDR(pte)   ((addr_t)(pte) & ~0xFFF)

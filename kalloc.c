@@ -99,6 +99,16 @@ kretain(char *v) {
   frameinfo[PGINDEX(frame)].refs++;  
 }
 
+void
+setchecksum(char *v, addr_t ori) {
+  frameinfo[PGINDEX(V2P(v))].checksum = ori;
+}
+
+addr_t
+readchecksum(char *v) {
+  return frameinfo[PGINDEX(V2P(v))].checksum;
+}
+
 int
 krefcount(char *v) {
   return frameinfo[PGINDEX(V2P(v))].refs;
