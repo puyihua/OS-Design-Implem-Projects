@@ -128,7 +128,7 @@ dedup(void *vstart, void *vend) {
   }
 
   //i = (char*)PGROUNDDOWN((addr_t)vstart);
-  i = i - PGSIZE;
+  /*i = i - PGSIZE;
   for(; i+PGSIZE <= pgend; i+=PGSIZE)
   {
     PTEi = walkpgdir(proc->pgdir,i,0);
@@ -137,7 +137,7 @@ dedup(void *vstart, void *vend) {
 	for (int t=0;t<PGSIZE;t++)
 		cprintf("%d ",*(((char*)i+t)));
 	cprintf("\n");
-  }
+  }*/
 
   switchuvm(proc);
   return;
