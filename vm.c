@@ -126,16 +126,19 @@ dedup(void *vstart, void *vend) {
 	     }
        //}
   }
-/*
-  i = (char*)PGROUNDDOWN((addr_t)vstart);
-  
+
+  //i = (char*)PGROUNDDOWN((addr_t)vstart);
+  i = i - PGSIZE;
   for(; i+PGSIZE <= pgend; i+=PGSIZE)
   {
     PTEi = walkpgdir(proc->pgdir,i,0);
     vai = P2V((PTE_ADDR(*PTEi)));	  
 	cprintf("%p 's content:  %d     ref: %d\n",i, *((char*)i), krefcount(vai));
+	for (int t=0;t<PGSIZE;t++)
+		cprintf("%d ",*(((char*)i+t)));
+	cprintf("\n");
   }
-	*/
+
   switchuvm(proc);
   return;
 }
@@ -149,10 +152,17 @@ copyonwrite(char* v)
   addr_t vv = PGROUNDDOWN((addr_t)v);
   pte = walkpgdir(proc->pgdir,vv,0);
   addr_t checksum;
+  addr_t va;
   char *mem;
+  va = P2V(PTE_ADDR(*pte));
   if((*pte) & PTE_COW)
   {
-	  checksum = readchecksum(P2V(PTE_ADDR(*pte)));
+	  if(krefcount(va)==1)
+	  { 
+		  *pte = *pte & ~PTE_COW | PTE_W;
+		  return 1;
+	  }
+	  checksum = readchecksum(va);
 	  krelease(P2V(PTE_ADDR(*pte)));
 	  mem = kalloc();
 	  memset(mem,0,PGSIZE);
