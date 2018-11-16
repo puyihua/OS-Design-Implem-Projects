@@ -87,7 +87,14 @@ updateprocfiles()
       num++;
       // also checks if the process at [index] is the current process
       // if yes, create a "self" directory
-      // TODO: your code here
+	  if (ptable.proc[index].state == RUNNING)
+	  {
+		  procfiles[PROCFILES+num].inum = index+1;
+		  char * name = procfiles[PROCFILES+num].name;
+		  char self_str[4] = "self";
+		  memcpy(name, self_str, 4);
+		  num++;
+	  }
 
 
     }
@@ -137,7 +144,8 @@ procfs_readi(struct inode* ip, char* buf, uint offset, uint size)
       sprintuint(buf1, kmemfreecount());
       return readi_helper(buf, offset, size, buf1, strlen(buf1));
     case 10002: // cpuinfo: print the total number of cpus. See the 'ncpu' global variable
-      // TODO: Your code here
+      sprintuint(buf1, ncpu);
+	  return readi_helper(buf, offset, size, buf1, strlen(buf1));
 
 
       return -1; // remove this after implementation
