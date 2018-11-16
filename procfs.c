@@ -95,7 +95,14 @@ updateprocfiles()
 		  memcpy(name, self_str, 4);
 		  num++;
 	  }
-
+	  /*
+	  int that_pid = ptable.proc[index].pid;
+      procfiles[PROCFILES+num].inum = 20000+that_pid;
+	  char tmp[10] = "name";
+	  memcpy(procfiles[PROCFILES+num].name,tmp,4);
+	  num++;	
+	  //{30000+that_pid,"pid"},{40000+that_pid,"ppid"},{50000+that_pid,"mappings"}};
+*/
 
     }
     index++;
@@ -131,10 +138,27 @@ procfs_readi(struct inode* ip, char* buf, uint offset, uint size)
     // It contains "name", "pid", "ppid", and "mappings".
     // Choose a good pattern for inum.
     // You will need to check inum to see what should be the file content (see below)
-    // TODO: Your code here
 
+   int inum = ip->inum;
+   int i;
+   for(i =0;i<updateprocfiles();i++)
+   {
+	   if(procfiles[i].inum == inum)
+		   break;
+   }
+   char * name = procfiles[i].name;
+   int that_pid = 0;
+   while('0' <= *name && *name <= '9')
+	   that_pid = that_pid*10 + *name++ - '0';
 
-    return -1; // remove this after implementation
+  // int index = updateprocfiles();
+  // procfiles[index].inum = 20000+that_pid;
+   //char tmp[10] = "name";
+  // procfiles[index].name
+   
+   struct dirent inner_procfiles[4] = {{20000+that_pid,"name"},{30000+that_pid,"pid"},{40000+that_pid,"ppid"},{50000+that_pid,"mappings"}};
+
+    return readi_helper(buf, offset, size, (char *)inner_procfiles, sizeof(struct dirent)*4);
   }
 
   // files
@@ -152,11 +176,46 @@ procfs_readi(struct inode* ip, char* buf, uint offset, uint size)
     default: break;
   }
 
-  // filling the content for all other files
-  // TODO: Your code here
+   int inum = ip->inum;
+   int i;
 
+  struct proc *p;
+  for(i=0;i<NPROC;i++)
+  {
+	  if (ptable.proc[i].pid == inum%10)
+		  break;
+  }
+  p = &ptable.proc[i];
 
-
+  if(inum>20000 && inum<30000){             //name 
+      memcpy(buf1, p->name, 16);
+      return readi_helper(buf, offset, size, buf1, strlen(buf1));}
+   else if (inum>30000 && inum<40000)  {    //pid
+	  sprintuint(buf1, p->pid);
+      return readi_helper(buf, offset, size, buf1, strlen(buf1));}
+   else if (inum>40000 && inum<50000)  {   //ppid
+	  sprintuint(buf1,p->parent->pid);
+      return readi_helper(buf, offset, size, buf1, strlen(buf1));}
+   else if (inum>50000 && inum<60000)  {   //mappings
+      char buf2[128];
+	  addr_t i = 0;
+	  int j = 0;
+	  //for(;i+PGSIZE <= PGROUNDUP(p->sz); i+=PGSIZE)
+	  for(;i+PGSIZE <= PGROUNDUP(p->sz);i+=PGSIZE)
+	  {
+		  //walkpgdir(p->pgdir,i,0);
+		  sprintx32(buf2+j,i);
+		  j = j+8;
+		  *(buf2+j) = ' ';
+		  j++;
+		  sprintx32(buf2+j,PTE_ADDR(*walkpgdir(p->pgdir,(char*)i,0)));
+		  j = j+8;
+		  *(buf2+j) = '\n';
+		  j++;
+		 // sprintx32(buf1,walkpgdir(p->pgdir,i,0));
+	  }
+      return readi_helper(buf, offset, size, buf2, strlen(buf2));}
+      
   return -1; // return -1 on error
 }
 

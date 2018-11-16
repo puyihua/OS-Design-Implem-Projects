@@ -193,6 +193,8 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
+typedef         addr_t pte_t;
+pte_t*          walkpgdir(pde_t*,const void*,int);
 
 // procfs.c
 void            procfsinit();

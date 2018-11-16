@@ -178,7 +178,7 @@ switchuvm(struct proc *p)
 // For each level, we dereference the correct entry, or allocate and
 // initialize entry if the PTE_P bit is not set
 
-static pte_t *
+pte_t *
 walkpgdir(pde_t *pml4, const void *va, int alloc)
 {
   pml4e_t *pml4e;
