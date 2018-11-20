@@ -12,6 +12,15 @@
 
 #define T_DIR ((1))
 
+static void
+sprintuint(char*, uint);
+
+extern struct {
+  struct spinlock lock;
+  struct proc proc[NPROC];
+} ptable;
+
+
   void
 procfs_ipopulate(struct inode* ip)
 {
@@ -28,13 +37,32 @@ procfs_iupdate(struct inode* ip)
 {
 }
 
+
+char syslog[2048];
+int log_index = 0;
   static int
 procfs_writei(struct inode* ip, char* buf, uint offset, uint count)
 {
-  return -1;
+  int index = 0;
+  uint cur_pid;
+  acquire(&ptable.lock);
+  while (index < NPROC) {
+    if (ptable.proc[index].state = RUNNING) {
+      cur_pid = ptable.proc[index].pid;
+	  break;
+	}
+  }
+	
+
+	sprintuint(syslog+log_index,ticks);
+	log_index += 4;
+	sprintuint(syslog+log_index,cur_pid);
+	log_index += 4;
+	memcpy(syslog+log_index,buf,strlen(buf));
+  return strlen(buf);
 }
 
-  static void
+ static void
 sprintuint(char* buf, uint x)
 {
   uint stack[10];
@@ -65,14 +93,8 @@ sprintx32(char * buf, uint x)
     buf[i] = (y < 10) ? (y + '0') : (y + 'a' - 10);
   }
 }
-
-extern struct {
-  struct spinlock lock;
-  struct proc proc[NPROC];
-} ptable;
-
-#define PROCFILES ((2))
-struct dirent procfiles[PROCFILES+NPROC+1] = {{10001,"meminfo"}, {10002,"cpuinfo"}};
+#define PROCFILES ((3))
+struct dirent procfiles[PROCFILES+NPROC+1] = {{10001,"meminfo"}, {10002,"cpuinfo"},{10003,"syslog"}};
 
 // returns the number of active processes, and updates the procfiles table
   static uint
@@ -138,7 +160,7 @@ procfs_readi(struct inode* ip, char* buf, uint offset, uint size)
     // It contains "name", "pid", "ppid", and "mappings".
     // Choose a good pattern for inum.
     // You will need to check inum to see what should be the file content (see below)
-
+   
    int inum = ip->inum;
    int i;
    for(i =0;i<updateprocfiles();i++)
@@ -163,6 +185,7 @@ procfs_readi(struct inode* ip, char* buf, uint offset, uint size)
 
   // files
   char buf1[32];
+  char buf2[128];
   switch (((int)ip->inum)) {
     case 10001: // meminfo: print the number of free pages
       sprintuint(buf1, kmemfreecount());
@@ -170,6 +193,9 @@ procfs_readi(struct inode* ip, char* buf, uint offset, uint size)
     case 10002: // cpuinfo: print the total number of cpus. See the 'ncpu' global variable
       sprintuint(buf1, ncpu);
 	  return readi_helper(buf, offset, size, buf1, strlen(buf1));
+	case 10003:  //syslog
+      return readi_helper(buf, offset, size, syslog, strlen(syslog));
+
 
 
       return -1; // remove this after implementation
@@ -197,7 +223,7 @@ procfs_readi(struct inode* ip, char* buf, uint offset, uint size)
 	  sprintuint(buf1,p->parent->pid);
       return readi_helper(buf, offset, size, buf1, strlen(buf1));}
    else if (inum>50000 && inum<60000)  {   //mappings
-      char buf2[128];
+
 	  addr_t i = 0;
 	  int j = 0;
 	  //for(;i+PGSIZE <= PGROUNDUP(p->sz); i+=PGSIZE)
