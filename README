@@ -1,3 +1,16 @@
+Course Site: https://sites.google.com/view/cs461fall2018/home?authuser=0
+
+
+branch            content
+ hw1        a simple user program
+ hw2        a splash-screen boot sector
+ hw3        console driver and display driver
+ hw4        eager and lazy mmap()
+ hw5        page deduplication and copy-on-write
+ hw6        '/proc' virtual file system
+
+=====================================================================
+
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern x86-based multiprocessor using ANSI C.
