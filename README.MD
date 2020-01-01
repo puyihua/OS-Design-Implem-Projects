@@ -1,4 +1,4 @@
-Course Site: https://sites.google.com/view/cs461fall2018/home?authuser=0
+Course Site: https://sites.google.com/view/cs461fall2019/home
 
 
 branch      |      content
