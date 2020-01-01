@@ -1,13 +1,14 @@
 Course Site: https://sites.google.com/view/cs461fall2018/home?authuser=0
 
 
-branch            content
- [hw1](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw1)        a simple user program
- [hw2](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw2)       a splash-screen boot sector
- [hw3](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw3)        console driver and display driver
- [hw4](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw4)        eager and lazy mmap()
- [hw5](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw5)        page deduplication and copy-on-write
- [hw6](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw6)        '/proc' virtual file system
+branch      |      content
+--- | ---
+ [hw1](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw1)       | a simple user program
+ [hw2](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw2)       | a splash-screen boot sector
+ [hw3](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw3)       | console driver and display driver
+ [hw4](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw4)       | eager and lazy mmap()
+ [hw5](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw5)       | page deduplication and copy-on-write
+ [hw6](https://github.com/puyihua/OS-Design-Implem-Projects/tree/hw6)       | '/proc' virtual file system
 
 =====================================================================
 
